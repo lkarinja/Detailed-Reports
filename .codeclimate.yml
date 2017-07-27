@@ -1,0 +1,24 @@
+engines:
+  duplication:
+    enabled: true
+    config:
+      languages:
+      - php:
+  phpmd:
+    enabled: true
+    checks:
+      Controversial/CamelCaseClassName:
+        enabled: false
+      Controversial/CamelCaseMethodName:
+        enabled: false
+      Controversial/CamelCaseParameterName:
+        enabled: false
+      Controversial/CamelCasePropertyName:
+        enabled: false
+      Controversial/CamelCaseVariableName:
+        enabled: false
+      Naming/LongVariable:
+        enabled: false
+ratings:
+  paths:
+  - "**.php"
