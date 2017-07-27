@@ -59,6 +59,7 @@ if(!class_exists('Detailed_Reports'))
 	// Define the class for the plugin
 	class Detailed_Reports
 	{
+
 		/**
 		 * Plugin constructor
 		 */
@@ -132,16 +133,13 @@ if(!class_exists('Detailed_Reports'))
 			{
 				// Data
 				$data = Helper::as_arrays($query_data);
-
 				// Column names
 				$column_names = array_keys($data[0]);
 
 				if(isset($_POST['export']))
 				{
 					$file = EXPORT_PATH . 'Export ' . $selected_method . ' ' . $start_date . ' to ' . $end_date . '.csv';
-					$data_to_write = $data;
-					array_unshift($data_to_write, $column_names);
-					Exporter::export_csv($data_to_write, $file);
+					Exporter::export_csv($data, $column_names, $file);
 				}
 			}
 
@@ -165,7 +163,7 @@ if(!class_exists('Detailed_Reports'))
 					<label><?php _e('Vendor:', $this->textdomain); ?></label>
 					<select class="chosen_select" id="show_vendor" name="show_vendor">
 						<option></option>
-						<?php foreach($vendors as $key => $vendor) printf('<option value="%s" %s>%s</option>', $vendor->ID, selected($selected_vendor, $vendor->ID, false), $vendor->display_name); ?>
+						<?php foreach($vendors as $vendor) printf('<option value="%s" %s>%s</option>', $vendor->ID, selected($selected_vendor, $vendor->ID, false), $vendor->display_name); ?>
 					</select>
 
 					<input type="submit" name="export" value="<?php _e('Export CSV', $this->textdomain); ?>" />

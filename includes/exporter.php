@@ -25,13 +25,16 @@ class Exporter
 	/**
 	 * Exports an Array to a CSV file
 	 */
-	public static function export_csv($array, $file)
+	public static function export_csv($data, $column_names, $file)
 	{
+		// Prepend column names
+		array_unshift($data, $column_names);
+
 		// File stream
 		$export_file = fopen($file, 'w');
 
 		// Add data to a new row in the CSV
-		foreach($array as $row)
+		foreach($data as $row)
 		{
 			if(is_object($row))
 			{
@@ -51,13 +54,16 @@ class Exporter
 		{
 			header('Content-Description: File Transfer');
 			header('Content-Type: text/csv');
-			header('Content-Disposition: attachment; filename=' . basename($file));
+			header('Content-Disposition: attachment; filename="' . basename($file)) . '"';
 			header('Pragma: no-cache');
 			header('Expires: 0');
+			header('Content-Length: ' . filesize($file));
 			ob_clean();
 			flush();
-			readfile(realpath($file));
-			exit;
+			$file_pointer = fopen($file, 'r');
+			print fread($file_pointer, filesize($file));
+			flush();
+			fclose($file_pointer);
 		}
 	}
 

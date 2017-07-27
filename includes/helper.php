@@ -35,7 +35,7 @@ class Helper
 	/**
 	 * Recursively cast all Objects in an Array to Arrays
 	 */
-	private static function to_array_of_arrays(&$item, $key)
+	private static function to_array_of_arrays(&$item)
 	{
 		// If the item is an Object
 		if(is_object($item))
