@@ -2,7 +2,7 @@
 /*
 	Plugin Name: WooCommerce/WC-Vendors Detailed Reports
 	Description: Generates detailed sales reports
-	Version: 1.0.0
+	Version: 1.1.0
 	Author: <a href="https://github.com/lkarinja">Leejae Karinja</a>
 	License: GPL3
 	License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -80,29 +80,48 @@ if(!class_exists('Detailed_Reports'))
 		 */
 		public function init()
 		{
-			// Add page in the admin
+			// Add page in Admin Menu
 			add_action('admin_menu', array($this, 'add_admin_page'));
 		}
 
 		/**
-		 * Creates a page in the Admin Menu
+		 * Creates a page in the Admin Menu and applies custom CSS
 		 *
 		 * Parts of this function are referenced from Terry Tsang (http://shop.terrytsang.com) Extra Fee Option Plugin (http://terrytsang.com/shop/shop/woocommerce-extra-fee-option/)
 		 * Licensed under GPL2 (Or later)
 		 */
 		public function add_admin_page()
 		{
-			add_submenu_page(
+			// Create Admin Page
+			$admin_page = add_submenu_page(
 				'woocommerce',
 				__('Detailed Reports', $this->textdomain),
 				__('Detailed Reports', $this->textdomain),
 				'manage_options',
-				'detailed-reports',
+				$this->textdomain,
 				array(
 					$this,
 					'reports_page'
 				)
 			);
+			// Apply CSS
+			add_action('load-' . $admin_page, array($this, 'add_admin_css'));
+		}
+
+		/**
+		 * Add CSS request to WordPress
+		 */
+		public function add_admin_css()
+		{
+			add_action('admin_enqueue_scripts', array($this, 'admin_page_css'));
+		}
+
+		/**
+		 * Applies CSS to WordPress
+		 */
+		public function admin_page_css()
+		{
+			wp_enqueue_style('detailed-reports-stylesheet', plugins_url('css/admin-page.css', __FILE__));
 		}
 
 		/**
@@ -146,64 +165,59 @@ if(!class_exists('Detailed_Reports'))
 			// HTML/PHP for the page display
 			?>
 
-			<form method="post" action="">
-				<p>
-					<label><?php _e('Method:', $this->textdomain); ?></label>
-					<select class="chosen_select" id="query_method" name="query_method">
-						<option value="by_product" <?php _e(selected($selected_method, 'by_product', false), $this->textdomain) ?>><?php _e('Product Sales Information', $this->textdomain); ?></option>
-						<option value="by_vendor" <?php _e(selected($selected_method, 'by_vendor', false), $this->textdomain) ?>><?php _e('Vendor Sales Information', $this->textdomain); ?></option>
-						<option value="basic_by_product" <?php _e(selected($selected_method, 'basic_by_product', false), $this->textdomain) ?>><?php _e('Product Quantities', $this->textdomain); ?></option>
-					</select>
+			<div class="detailed-reports-options">
+				<h3><span><?php _e('Options', $this->textdomain); ?></span></h3>
+				<form method="post" action="">
+					<p>
+						<label><?php _e('Method:', $this->textdomain); ?></label>
+						<select name="query_method">
+							<option value="by_product" <?php _e(selected($selected_method, 'by_product', false), $this->textdomain) ?>><?php _e('Product Sales Information', $this->textdomain); ?></option>
+							<option value="by_vendor" <?php _e(selected($selected_method, 'by_vendor', false), $this->textdomain) ?>><?php _e('Vendor Sales Information', $this->textdomain); ?></option>
+							<option value="basic_by_product" <?php _e(selected($selected_method, 'basic_by_product', false), $this->textdomain) ?>><?php _e('Product Quantities', $this->textdomain); ?></option>
+						</select>
 
-					<label><?php _e('From:', $this->textdomain); ?></label>
-					<input type="text" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($start_date); ?>" name="start_date"/>
+						<label><?php _e('From:', $this->textdomain); ?></label>
+						<input type="text" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($start_date); ?>" name="start_date"/>
 
-					<label><?php _e('To:', $this->textdomain); ?></label>
-					<input type="text" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($end_date); ?>" name="end_date"/>
+						<label><?php _e('To:', $this->textdomain); ?></label>
+						<input type="text" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($end_date); ?>" name="end_date"/>
 
-					<label><?php _e('Vendor:', $this->textdomain); ?></label>
-					<select class="chosen_select" id="show_vendor" name="show_vendor">
-						<option></option>
-						<?php foreach($vendors as $vendor) printf('<option value="%s" %s>%s</option>', $vendor->ID, selected($selected_vendor, $vendor->ID, false), $vendor->display_name); ?>
-					</select>
+						<label><?php _e('Vendor:', $this->textdomain); ?></label>
+						<select name="show_vendor">
+							<option></option>
+							<?php foreach($vendors as $vendor) printf('<option value="%s" %s>%s</option>', $vendor->ID, selected($selected_vendor, $vendor->ID, false), $vendor->display_name); ?>
+						</select>
 
-					<input type="submit" name="export" value="<?php _e('Export CSV', $this->textdomain); ?>" />
+						<br>
 
-					<br>
+						<input class="button-secondary" type="submit" value="<?php _e('Get Results', $this->textdomain); ?>" />
+						<input class="button-secondary" type="submit" name="export" value="<?php _e('Export CSV', $this->textdomain); ?>" />
+					</p>
+				</form>
+			</div>
 
-					<input type="submit" value="<?php _e('Get Results', $this->textdomain); ?>" />
-				</p>
-			</form>
-
-			<div>
+			<div class="detailed-reports-results">
 				<?php if(isset($data)): ?>
 					<h3><span><?php _e('Results', $this->textdomain); ?></span></h3>
 
-					<div>
-						<style>
-						table, th, td {
-							border: 1px solid black;
-						}
-						</style>
-						<table>
-							<thead>
-								<tr>
-								<?php foreach($column_names as $column_name): ?>
-									<th><?php echo $column_name; ?></th>
-								<?php endforeach; ?>
-								</tr>
-							</thead>
-							<tbody>
-							<?php foreach($data as $item): ?>
-								<tr>
-									<?php foreach($item as $item_data): ?>
-										<td><?php echo $item_data; ?></td>
-									<?php endforeach; ?>
-								</tr>
+					<table>
+						<thead>
+							<tr>
+							<?php foreach($column_names as $column_name): ?>
+								<th><?php echo $column_name; ?></th>
 							<?php endforeach; ?>
-							</tbody>
-						</table>
-					</div>
+							</tr>
+						</thead>
+						<tbody>
+						<?php foreach($data as $item): ?>
+							<tr>
+								<?php foreach($item as $item_data): ?>
+									<td><?php echo $item_data; ?></td>
+								<?php endforeach; ?>
+							</tr>
+						<?php endforeach; ?>
+						</tbody>
+					</table>
 				<?php endif; ?>
 			</div>
 

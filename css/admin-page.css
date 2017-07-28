@@ -1,0 +1,33 @@
+.detailed-reports-options h3, .detailed-reports-results h3
+{
+	font-weight: bolder;
+}
+
+.detailed-reports-options label
+{
+	font-weight: bold;
+}
+
+.detailed-reports-results table
+{
+	border: 3px solid black;
+	background-color: lightgray;
+}
+
+.detailed-reports-results th
+{
+	text-align: center;
+	font-weight: bolder;
+}
+
+.detailed-reports-results td
+{
+	text-align: right;
+}
+
+.detailed-reports-results th, .detailed-reports-results td
+{
+	padding: 5px 10px 5px 10px;
+	border: 1px solid black;
+	background-color: white;
+}
