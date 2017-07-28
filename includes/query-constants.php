@@ -622,4 +622,229 @@ class Query_Constants
 		  product_meta.vendor_name ASC
 		";
 
+	// SQL Query to get details per product
+	const BASIC_ITEM_DETAILS_QUERY =
+		"
+		SELECT
+		  product_meta.product_name AS 'Product Name',
+		  product_meta.product_sku AS 'Product SKU',
+		  product_meta.vendor_name AS 'Vendor Name',
+		  (SUM(product_data.product_qty) - ABS(SUM(product_data.product_qty_refunded))) AS 'Quantity Sold'
+		FROM
+		  (
+			SELECT
+			  base_product_data.product_id AS product_id,
+			  base_product_data.product_qty AS product_qty,
+			  base_product_data.product_qty_refunded AS product_qty_refunded,
+			  product_vendors.vendor_id AS vendor_id
+			FROM
+			  (
+				SELECT
+				  item_data.product_id AS product_id,
+				  item_data.product_qty AS product_qty,
+				  '0' AS product_qty_refunded
+				FROM
+				  (
+					SELECT
+					  base_item_data.product_id AS product_id,
+					  base_item_data.product_qty AS product_qty
+					FROM
+					  (
+						SELECT
+						  id.product_id AS product_id,
+						  qty.product_qty AS product_qty,
+						  id.parent_post AS parent_post
+						FROM
+						  (
+							SELECT
+							  meta.order_item_id AS order_item_id,
+							  meta.meta_value AS product_id,
+							  posts.post_parent AS parent_post
+							FROM
+							  wp_posts AS posts
+							  INNER JOIN
+								wp_woocommerce_order_items AS items
+								ON posts.ID = items.order_id
+							  INNER JOIN
+								wp_woocommerce_order_itemmeta AS meta
+								ON items.order_item_id = meta.order_item_id
+							WHERE
+							  meta.meta_key = '_product_id'
+							  AND posts.post_type = 'shop_order_vendor'
+						  )
+						  AS id
+						  LEFT OUTER JOIN
+							(
+							  SELECT
+								meta.order_item_id AS order_item_id,
+								meta.meta_value AS product_qty
+							  FROM
+								wp_posts AS posts
+								INNER JOIN
+								  wp_woocommerce_order_items AS items
+								  ON posts.ID = items.order_id
+								INNER JOIN
+								  wp_woocommerce_order_itemmeta AS meta
+								  ON items.order_item_id = meta.order_item_id
+							  WHERE
+								meta.meta_key = '_qty'
+								AND posts.post_type = 'shop_order_vendor'
+							)
+							AS qty
+							ON qty.order_item_id = id.order_item_id
+					  )
+					  AS base_item_data
+					  INNER JOIN
+						(
+						  SELECT
+							posts.ID AS post_id
+						  FROM
+							wp_posts AS posts
+						  WHERE
+							posts.post_status = 'wc-completed'
+							AND posts.post_type = 'shop_order'
+							%s
+						)
+						AS post
+						ON post.post_id = base_item_data.parent_post
+				  )
+				  AS item_data
+				UNION
+				SELECT
+				  refund_data.product_id AS product_id,
+				  '0' AS product_qty,
+				  refund_data.product_qty_refunded AS product_qty_refunded
+				FROM
+				  (
+					SELECT
+					  base_refund_data.product_id AS product_id,
+					  base_refund_data.product_qty_refunded AS product_qty_refunded
+					FROM
+					  (
+						SELECT
+						  id.product_id AS product_id,
+						  qty_refunded.product_qty_refunded AS product_qty_refunded,
+						  id.parent_post AS parent_post
+						FROM
+						  (
+							SELECT
+							  meta.order_item_id AS order_item_id,
+							  meta.meta_value AS product_id,
+							  posts.post_parent AS parent_post
+							FROM
+							  wp_posts AS posts
+							  INNER JOIN
+								wp_woocommerce_order_items AS items
+								ON posts.ID = items.order_id
+							  INNER JOIN
+								wp_woocommerce_order_itemmeta AS meta
+								ON items.order_item_id = meta.order_item_id
+							WHERE
+							  meta.meta_key = '_product_id'
+							  AND posts.post_type = 'shop_order_refund'
+						  )
+						  AS id
+						  LEFT OUTER JOIN
+							(
+							  SELECT
+								meta.order_item_id AS order_item_id,
+								meta.meta_value AS product_qty_refunded
+							  FROM
+								wp_posts AS posts
+								INNER JOIN
+								  wp_woocommerce_order_items AS items
+								  ON posts.ID = items.order_id
+								INNER JOIN
+								  wp_woocommerce_order_itemmeta AS meta
+								  ON items.order_item_id = meta.order_item_id
+							  WHERE
+								meta.meta_key = '_qty'
+								AND posts.post_type = 'shop_order_refund'
+							)
+							AS qty_refunded
+							ON qty_refunded.order_item_id = id.order_item_id
+					  )
+					  AS base_refund_data
+					  INNER JOIN
+						(
+						  SELECT
+							posts.ID AS post_id
+						  FROM
+							wp_posts AS posts
+						  WHERE
+							posts.post_status = 'wc-completed'
+							AND posts.post_type = 'shop_order'
+							%s
+						)
+						AS post
+						ON post.post_id = base_refund_data.parent_post
+				  )
+				  AS refund_data
+			  )
+			  AS base_product_data
+			  INNER JOIN
+				(
+				  SELECT
+					posts.id AS product_id,
+					posts.post_author AS vendor_id
+				  FROM
+					wp_posts AS posts
+				  WHERE
+					posts.post_type = 'product'
+				)
+				AS product_vendors
+				ON product_vendors.product_id = base_product_data.product_id
+		  )
+		  AS product_data
+		  INNER JOIN
+			(
+			  SELECT
+				product.product_id AS product_id,
+				product.product_name AS product_name,
+				product.product_sku AS product_sku,
+				vendor.vendor_name AS vendor_name
+			  FROM
+				(
+				  SELECT
+					posts.id AS product_id,
+					posts.post_title AS product_name,
+					meta.meta_value AS product_sku,
+					posts.post_author AS vendor_id
+				  FROM
+					wp_posts AS posts
+					INNER JOIN
+					  wp_postmeta AS meta
+					  ON posts.id = meta.post_id
+				  WHERE
+					meta.meta_key = '_sku'
+					AND posts.post_type = 'product'
+				)
+				AS product
+				INNER JOIN
+				  (
+					SELECT
+					  users.id AS vendor_id,
+					  users.display_name AS vendor_name
+					FROM
+					  wp_users AS users
+					  INNER JOIN
+						wp_usermeta AS meta
+						ON users.id = meta.user_id
+					WHERE
+					  meta.meta_key = 'wp_capabilities'
+					  AND meta.meta_value LIKE '%%vendor%%'
+					  %s
+				  )
+				  AS vendor
+				  ON vendor.vendor_id = product.vendor_id
+			)
+			AS product_meta
+			ON product_meta.product_id = product_data.product_id
+		GROUP BY
+		  product_data.product_id
+		ORDER BY
+		  product_meta.vendor_name ASC,
+		  product_meta.product_name ASC
+		";
+
 }

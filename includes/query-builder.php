@@ -59,6 +59,10 @@ class Query_Builder
 		{
 			$base_query = Query_Constants::VENDOR_DETAILS_QUERY;
 		}
+		elseif($method == 'basic_by_product')
+		{
+			$base_query = Query_Constants::BASIC_ITEM_DETAILS_QUERY;
+		}
 
 		$prepared = sprintf(
 			$base_query,

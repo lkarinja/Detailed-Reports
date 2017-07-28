@@ -124,7 +124,7 @@ if(!class_exists('Detailed_Reports'))
 			$selected_vendor = !empty($_POST['show_vendor']) ? (int) $_POST['show_vendor'] : false;
 
 			// Selected method to filter by
-			$selected_method = !empty($_POST['query_method']) ? $_POST['query_method'] : 'by_vendor';
+			$selected_method = !empty($_POST['query_method']) ? $_POST['query_method'] : 'basic_by_product';
 
 			// Data retrieved from SQL Query
 			$query_data = Query_Builder::get_query_data($start_date, date('Y-m-d', strtotime('+1 day', strtotime($end_date))), $selected_vendor, $selected_method);
@@ -150,8 +150,9 @@ if(!class_exists('Detailed_Reports'))
 				<p>
 					<label><?php _e('Method:', $this->textdomain); ?></label>
 					<select class="chosen_select" id="query_method" name="query_method">
-						<option value="by_product" <?php _e(selected($selected_method, 'by_product', false), $this->textdomain) ?>><?php _e('By Product', $this->textdomain); ?></option>
-						<option value="by_vendor" <?php _e(selected($selected_method, 'by_vendor', false), $this->textdomain) ?>><?php _e('By Vendor', $this->textdomain); ?></option>
+						<option value="by_product" <?php _e(selected($selected_method, 'by_product', false), $this->textdomain) ?>><?php _e('Product Sales Information', $this->textdomain); ?></option>
+						<option value="by_vendor" <?php _e(selected($selected_method, 'by_vendor', false), $this->textdomain) ?>><?php _e('Vendor Sales Information', $this->textdomain); ?></option>
+						<option value="basic_by_product" <?php _e(selected($selected_method, 'basic_by_product', false), $this->textdomain) ?>><?php _e('Product Quantities', $this->textdomain); ?></option>
 					</select>
 
 					<label><?php _e('From:', $this->textdomain); ?></label>
