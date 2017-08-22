@@ -37,8 +37,8 @@ class Query_Constants
 		  CONCAT('$', ROUND(SUM(product_data.product_total), 2)) AS 'Total Sold',
 		  CONCAT('-$', ROUND(ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Total Refunded',
 		  CONCAT('$', ROUND(SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Resulting Total Sold',
-		  CONCAT('$', ROUND(SUM(product_data.product_commission), 2)) AS 'Commission Fee',
-		  CONCAT('$', ROUND((SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))) - SUM(product_data.product_commission), 2)) AS 'Net Profit'
+		  CONCAT('$', ROUND(SUM(product_data.product_commission), 2)) AS 'Vendor Payout',
+		  CONCAT('$', ROUND((SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))) - SUM(product_data.product_commission), 2)) AS 'Store Payout'
 		FROM
 		  (
 			SELECT
@@ -340,8 +340,8 @@ class Query_Constants
 		  CONCAT('$', ROUND(SUM(product_data.product_total), 2)) AS 'Total Sold',
 		  CONCAT('-$', ROUND(ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Total Refunded',
 		  CONCAT('$', ROUND(SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Resulting Total Sold',
-		  CONCAT('$', ROUND(SUM(product_data.product_commission), 2)) AS 'Commission Fee',
-		  CONCAT('$', ROUND((SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))) - SUM(product_data.product_commission), 2)) AS 'Net Profit'
+		  CONCAT('$', ROUND(SUM(product_data.product_commission), 2)) AS 'Vendor Payout',
+		  CONCAT('$', ROUND((SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))) - SUM(product_data.product_commission), 2)) AS 'Store Payout'
 		FROM
 		  (
 			SELECT
