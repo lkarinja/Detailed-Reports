@@ -64,6 +64,9 @@ class Query_Builder
 			$base_query = Query_Constants::BASIC_ITEM_DETAILS_QUERY;
 		}
 
+		// Apply database table prefix
+		$base_query = str_replace('wp_', $wpdb->prefix, $base_query);
+
 		$prepared = sprintf(
 			$base_query,
 			$between_dates,
