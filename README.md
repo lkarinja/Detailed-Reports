@@ -6,3 +6,6 @@ Code Climate GPA: [![Code Climate GPA](https://codeclimate.com/github/lkarinja/D
 Issue Count: [![Issue Count](https://codeclimate.com/github/lkarinja/Detailed-Reports/badges/issue_count.svg)](https://codeclimate.com/github/lkarinja/Detailed-Reports)
 
 Generates detailed sales reports from WooCommerce and WC Vendors
+
+Note:
+An "Exports" folder must be created in your base WordPress installation directory with Read and Write permissions.
