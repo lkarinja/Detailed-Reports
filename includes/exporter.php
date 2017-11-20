@@ -55,15 +55,14 @@ class Exporter
 			header('Content-Description: File Transfer');
 			header('Content-Type: text/csv');
 			header('Content-Disposition: attachment; filename="' . basename($file)) . '"';
-			header('Pragma: no-cache');
 			header('Expires: 0');
+			header('Cache-Control: must-revalidate');
+			header('Pragma: public');
 			header('Content-Length: ' . filesize($file));
 			ob_clean();
 			flush();
-			$file_pointer = fopen($file, 'r');
-			print fread($file_pointer, filesize($file));
-			flush();
-			fclose($file_pointer);
+			readfile($file);
+			exit;
 		}
 	}
 
