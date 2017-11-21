@@ -38,7 +38,7 @@ class Query_Constants
 		  CONCAT('-$', ROUND(ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Total Refunded',
 		  CONCAT('$', ROUND(SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Resulting Total Sold',
 		  CONCAT('$', ROUND(SUM(product_data.product_commission), 2)) AS 'Vendor Payout',
-		  CONCAT('$', ROUND((SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))) - SUM(product_data.product_commission), 2)) AS 'Store Payout'
+		  CONCAT('$', ROUND(SUM(product_data.product_total) - SUM(product_data.product_commission), 2)) AS 'Store Payout'
 		FROM
 		  (
 			SELECT
@@ -53,11 +53,11 @@ class Query_Constants
 			  (
 				SELECT
 				  item_data.product_id AS product_id,
-				  item_data.product_qty AS product_qty,
-				  item_data.product_total AS product_total,
+				  SUM(item_data.product_qty) AS product_qty,
+				  SUM(item_data.product_total) AS product_total,
 				  '0' AS product_qty_refunded,
 				  '0' AS product_total_refunded,
-				  item_data.product_commission AS product_commission
+				  SUM(item_data.product_commission) AS product_commission
 				FROM
 				  (
 					SELECT
@@ -166,13 +166,15 @@ class Query_Constants
 						ON post.post_id = base_item_data.parent_post
 				  )
 				  AS item_data
+				  GROUP BY
+					item_data.product_id
 				UNION
 				SELECT
 				  refund_data.product_id AS product_id,
 				  '0' AS product_qty,
 				  '0' AS product_total,
-				  refund_data.product_qty_refunded AS product_qty_refunded,
-				  refund_data.product_total_refunded AS product_total_refunded,
+				  SUM(refund_data.product_qty_refunded) AS product_qty_refunded,
+				  SUM(refund_data.product_total_refunded) AS product_total_refunded,
 				  '0' AS product_commission
 				FROM
 				  (
@@ -261,6 +263,8 @@ class Query_Constants
 						ON post.post_id = base_refund_data.parent_post
 				  )
 				  AS refund_data
+				  GROUP BY
+					refund_data.product_id
 			  )
 			  AS base_product_data
 			  INNER JOIN
@@ -341,7 +345,7 @@ class Query_Constants
 		  CONCAT('-$', ROUND(ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Total Refunded',
 		  CONCAT('$', ROUND(SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Resulting Total Sold',
 		  CONCAT('$', ROUND(SUM(product_data.product_commission), 2)) AS 'Vendor Payout',
-		  CONCAT('$', ROUND((SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))) - SUM(product_data.product_commission), 2)) AS 'Store Payout'
+		  CONCAT('$', ROUND(SUM(product_data.product_total) - SUM(product_data.product_commission), 2)) AS 'Store Payout'
 		FROM
 		  (
 			SELECT
@@ -356,11 +360,11 @@ class Query_Constants
 			  (
 				SELECT
 				  item_data.product_id AS product_id,
-				  item_data.product_qty AS product_qty,
-				  item_data.product_total AS product_total,
+				  SUM(item_data.product_qty) AS product_qty,
+				  SUM(item_data.product_total) AS product_total,
 				  '0' AS product_qty_refunded,
 				  '0' AS product_total_refunded,
-				  item_data.product_commission AS product_commission
+				  SUM(item_data.product_commission) AS product_commission
 				FROM
 				  (
 					SELECT
@@ -469,13 +473,15 @@ class Query_Constants
 						ON post.post_id = base_item_data.parent_post
 				  )
 				  AS item_data
+				  GROUP BY
+					item_data.product_id
 				UNION
 				SELECT
 				  refund_data.product_id AS product_id,
 				  '0' AS product_qty,
 				  '0' AS product_total,
-				  refund_data.product_qty_refunded AS product_qty_refunded,
-				  refund_data.product_total_refunded AS product_total_refunded,
+				  SUM(refund_data.product_qty_refunded) AS product_qty_refunded,
+				  SUM(refund_data.product_total_refunded) AS product_total_refunded,
 				  '0' AS product_commission
 				FROM
 				  (
@@ -564,6 +570,8 @@ class Query_Constants
 						ON post.post_id = base_refund_data.parent_post
 				  )
 				  AS refund_data
+				  GROUP BY
+					refund_data.product_id
 			  )
 			  AS base_product_data
 			  INNER JOIN
@@ -629,7 +637,7 @@ class Query_Constants
 		  product_meta.product_name AS 'Product Name',
 		  product_meta.product_sku AS 'Product SKU',
 		  product_meta.vendor_name AS 'Vendor Name',
-		  (SUM(product_data.product_qty) - ABS(SUM(product_data.product_qty_refunded))) AS 'Quantity Sold'
+		  product_data.product_qty - ABS(product_data.product_qty_refunded) AS 'Quantity Sold'
 		FROM
 		  (
 			SELECT
@@ -641,7 +649,7 @@ class Query_Constants
 			  (
 				SELECT
 				  item_data.product_id AS product_id,
-				  item_data.product_qty AS product_qty,
+				  SUM(item_data.product_qty) AS product_qty,
 				  '0' AS product_qty_refunded
 				FROM
 				  (
@@ -709,11 +717,13 @@ class Query_Constants
 						ON post.post_id = base_item_data.parent_post
 				  )
 				  AS item_data
+				  GROUP BY
+					item_data.product_id
 				UNION
 				SELECT
 				  refund_data.product_id AS product_id,
 				  '0' AS product_qty,
-				  refund_data.product_qty_refunded AS product_qty_refunded
+				  SUM(refund_data.product_qty_refunded) AS product_qty_refunded
 				FROM
 				  (
 					SELECT
@@ -780,6 +790,8 @@ class Query_Constants
 						ON post.post_id = base_refund_data.parent_post
 				  )
 				  AS refund_data
+				  GROUP BY
+					refund_data.product_id
 			  )
 			  AS base_product_data
 			  INNER JOIN
