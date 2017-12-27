@@ -67,7 +67,7 @@ class Query_Constants
 					  base_item_data.product_commission AS product_commission
 					FROM
 					  (
-						SELECT
+						SELECT DISTINCT
 						  id.product_id AS product_id,
 						  qty.product_qty AS product_qty,
 						  total.product_total AS product_total,
@@ -184,7 +184,7 @@ class Query_Constants
 					  base_refund_data.product_total_refunded AS product_total_refunded
 					FROM
 					  (
-						SELECT
+						SELECT DISTINCT
 						  id.product_id AS product_id,
 						  qty_refunded.product_qty_refunded AS product_qty_refunded,
 						  total_refunded.product_total_refunded AS product_total_refunded,
@@ -374,7 +374,7 @@ class Query_Constants
 					  base_item_data.product_commission AS product_commission
 					FROM
 					  (
-						SELECT
+						SELECT DISTINCT
 						  id.product_id AS product_id,
 						  qty.product_qty AS product_qty,
 						  total.product_total AS product_total,
@@ -491,7 +491,7 @@ class Query_Constants
 					  base_refund_data.product_total_refunded AS product_total_refunded
 					FROM
 					  (
-						SELECT
+						SELECT DISTINCT
 						  id.product_id AS product_id,
 						  qty_refunded.product_qty_refunded AS product_qty_refunded,
 						  total_refunded.product_total_refunded AS product_total_refunded,
@@ -658,7 +658,7 @@ class Query_Constants
 					  base_item_data.product_qty AS product_qty
 					FROM
 					  (
-						SELECT
+						SELECT DISTINCT
 						  id.product_id AS product_id,
 						  qty.product_qty AS product_qty,
 						  id.parent_post AS parent_post
@@ -731,7 +731,7 @@ class Query_Constants
 					  base_refund_data.product_qty_refunded AS product_qty_refunded
 					FROM
 					  (
-						SELECT
+						SELECT DISTINCT
 						  id.product_id AS product_id,
 						  qty_refunded.product_qty_refunded AS product_qty_refunded,
 						  id.parent_post AS parent_post
