@@ -637,7 +637,7 @@ class Query_Constants
 		  product_meta.product_name AS 'Product Name',
 		  product_meta.product_sku AS 'Product SKU',
 		  product_meta.vendor_name AS 'Vendor Name',
-		  product_data.product_qty - ABS(product_data.product_qty_refunded) AS 'Quantity Sold'
+		  product_data.product_qty - ABS(SUM(product_data.product_qty_refunded)) AS 'Quantity Sold'
 		FROM
 		  (
 			SELECT
