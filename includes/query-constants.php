@@ -37,7 +37,7 @@ class Query_Constants
 		  CONCAT('$', ROUND(SUM(product_data.product_total), 2)) AS 'Total Sold',
 		  CONCAT('-$', ROUND(ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Total Refunded',
 		  CONCAT('$', ROUND(SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Resulting Total Sold',
-		  CONCAT('$', ROUND(SUM(product_data.product_commission), 2)) AS 'Vendor Payout',
+		  CONCAT('$', ROUND(SUM(product_data.product_commission) - ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Vendor Payout',
 		  CONCAT('$', ROUND(SUM(product_data.product_total) - SUM(product_data.product_commission), 2)) AS 'Store Payout'
 		FROM
 		  (
@@ -344,7 +344,7 @@ class Query_Constants
 		  CONCAT('$', ROUND(SUM(product_data.product_total), 2)) AS 'Total Sold',
 		  CONCAT('-$', ROUND(ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Total Refunded',
 		  CONCAT('$', ROUND(SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Resulting Total Sold',
-		  CONCAT('$', ROUND(SUM(product_data.product_commission), 2)) AS 'Vendor Payout',
+		  CONCAT('$', ROUND(SUM(product_data.product_commission) - ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Vendor Payout',
 		  CONCAT('$', ROUND(SUM(product_data.product_total) - SUM(product_data.product_commission), 2)) AS 'Store Payout'
 		FROM
 		  (
@@ -637,7 +637,7 @@ class Query_Constants
 		  product_meta.product_name AS 'Product Name',
 		  product_meta.product_sku AS 'Product SKU',
 		  product_meta.vendor_name AS 'Vendor Name',
-		  product_data.product_qty - ABS(product_data.product_qty_refunded) AS 'Quantity Sold'
+		  product_data.product_qty - ABS(SUM(product_data.product_qty_refunded)) AS 'Quantity Sold'
 		FROM
 		  (
 			SELECT
