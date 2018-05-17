@@ -37,8 +37,8 @@ class Query_Constants
 		  CONCAT('$', ROUND(SUM(product_data.product_total), 2)) AS 'Total Sold',
 		  CONCAT('-$', ROUND(ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Total Refunded',
 		  CONCAT('$', ROUND(SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Resulting Total Sold',
-		  CONCAT('$', ROUND(SUM(product_data.product_commission) - ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Vendor Payout',
-		  CONCAT('$', ROUND(SUM(product_data.product_total) - SUM(product_data.product_commission), 2)) AS 'Store Payout'
+		  CONCAT('$', ROUND((SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))) - GREATEST(0, ((SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))) - ((SUM(product_data.product_commission))/(1 + ABS(SUM(product_data.product_qty_refunded)))))), 2)) AS 'Vendor Payout',
+		  CONCAT('$', ROUND(GREATEST(0, (SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))) - ((SUM(product_data.product_commission))/(1 + ABS(SUM(product_data.product_qty_refunded))))), 2)) AS 'Store Payout'
 		FROM
 		  (
 			SELECT
@@ -336,298 +336,324 @@ class Query_Constants
 	const VENDOR_DETAILS_QUERY =
 		"
 		SELECT
-		  product_data.vendor_id AS 'Vendor ID',
-		  product_meta.vendor_name AS 'Vendor Name',
-		  SUM(product_data.product_qty) AS 'Items Sold',
-		  SUM(product_data.product_qty_refunded) AS 'Items Refunded',
-		  (SUM(product_data.product_qty) - ABS(SUM(product_data.product_qty_refunded))) AS 'Resulting Items Sold',
-		  CONCAT('$', ROUND(SUM(product_data.product_total), 2)) AS 'Total Sold',
-		  CONCAT('-$', ROUND(ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Total Refunded',
-		  CONCAT('$', ROUND(SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Resulting Total Sold',
-		  CONCAT('$', ROUND(SUM(product_data.product_commission) - ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Vendor Payout',
-		  CONCAT('$', ROUND(SUM(product_data.product_total) - SUM(product_data.product_commission), 2)) AS 'Store Payout'
+		  data.vendor_id AS 'Vendor ID',
+		  data.vendor_name AS 'Vendor Name',
+		  SUM(data.quantity_sold) AS 'Items Sold',
+		  SUM(data.quantity_refunded) AS 'Items Refunded',
+		  SUM(data.resulting_quantity_sold) AS 'Resulting Items Sold',
+		  CONCAT('$', ROUND(SUM(data.total_sold), 2)) AS 'Total Sold',
+		  CONCAT('-$', ROUND(SUM(data.total_refunded), 2)) AS 'Total Refunded',
+		  CONCAT('$', ROUND(SUM(data.resulting_total_sold), 2)) AS 'Resulting Total Sold',
+		  CONCAT('$', ROUND(SUM(data.vendor_payout), 2)) AS 'Vendor Payout',
+		  CONCAT('$', ROUND(SUM(data.store_payout), 2)) AS 'Store Payout'
 		FROM
 		  (
 			SELECT
-			  base_product_data.product_id AS product_id,
-			  base_product_data.product_qty AS product_qty,
-			  base_product_data.product_total AS product_total,
-			  base_product_data.product_commission AS product_commission,
-			  base_product_data.product_qty_refunded AS product_qty_refunded,
-			  base_product_data.product_total_refunded AS product_total_refunded,
-			  product_vendors.vendor_id AS vendor_id
+			  product_data.product_id AS product_id,
+			  product_data.vendor_id AS vendor_id,
+			  product_meta.vendor_name AS vendor_name,
+			  SUM(product_data.product_qty) AS quantity_sold,
+			  SUM(product_data.product_qty_refunded) AS quantity_refunded,
+			  SUM(product_data.product_qty) - ABS(SUM(product_data.product_qty_refunded)) AS resulting_quantity_sold,
+			  SUM(product_data.product_total) AS total_sold,
+			  ABS(SUM(product_data.product_total_refunded)) AS total_refunded,
+			  SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded)) AS resulting_total_sold,
+			  (SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))) - GREATEST(0, ((SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))) - ((SUM(product_data.product_commission)) / (1 + ABS(SUM(product_data.product_qty_refunded)))))) AS vendor_payout,
+			  GREATEST(0, (SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))) - ((SUM(product_data.product_commission)) / (1 + ABS(SUM(product_data.product_qty_refunded))))) AS store_payout
 			FROM
 			  (
 				SELECT
-				  item_data.product_id AS product_id,
-				  SUM(item_data.product_qty) AS product_qty,
-				  SUM(item_data.product_total) AS product_total,
-				  '0' AS product_qty_refunded,
-				  '0' AS product_total_refunded,
-				  SUM(item_data.product_commission) AS product_commission
+				  base_product_data.product_id AS product_id,
+				  base_product_data.product_qty AS product_qty,
+				  base_product_data.product_total AS product_total,
+				  base_product_data.product_commission AS product_commission,
+				  base_product_data.product_qty_refunded AS product_qty_refunded,
+				  base_product_data.product_total_refunded AS product_total_refunded,
+				  product_vendors.vendor_id AS vendor_id
 				FROM
 				  (
 					SELECT
-					  base_item_data.product_id AS product_id,
-					  base_item_data.product_qty AS product_qty,
-					  base_item_data.product_total AS product_total,
-					  base_item_data.product_commission AS product_commission
+					  item_data.product_id AS product_id,
+					  SUM(item_data.product_qty) AS product_qty,
+					  SUM(item_data.product_total) AS product_total,
+					  '0' AS product_qty_refunded,
+					  '0' AS product_total_refunded,
+					  SUM(item_data.product_commission) AS product_commission
 					FROM
 					  (
-						SELECT DISTINCT
-						  id.product_id AS product_id,
-						  qty.product_qty AS product_qty,
-						  total.product_total AS product_total,
-						  commission.product_commission AS product_commission,
-						  id.parent_post AS parent_post
+						SELECT
+						  base_item_data.product_id AS product_id,
+						  base_item_data.product_qty AS product_qty,
+						  base_item_data.product_total AS product_total,
+						  base_item_data.product_commission AS product_commission
 						FROM
 						  (
-							SELECT
-							  meta.order_item_id AS order_item_id,
-							  meta.meta_value AS product_id,
-							  posts.post_parent AS parent_post
+							SELECT DISTINCT
+							  id.product_id AS product_id,
+							  qty.product_qty AS product_qty,
+							  total.product_total AS product_total,
+							  commission.product_commission AS product_commission,
+							  id.parent_post AS parent_post
 							FROM
-							  wp_posts AS posts
-							  INNER JOIN
-								wp_woocommerce_order_items AS items
-								ON posts.ID = items.order_id
-							  INNER JOIN
-								wp_woocommerce_order_itemmeta AS meta
-								ON items.order_item_id = meta.order_item_id
-							WHERE
-							  meta.meta_key = '_product_id'
-							  AND posts.post_type = 'shop_order_vendor'
+							  (
+								SELECT
+								  meta.order_item_id AS order_item_id,
+								  meta.meta_value AS product_id,
+								  posts.post_parent AS parent_post
+								FROM
+								  wp_posts AS posts
+								  INNER JOIN
+									wp_woocommerce_order_items AS items
+									ON posts.ID = items.order_id
+								  INNER JOIN
+									wp_woocommerce_order_itemmeta AS meta
+									ON items.order_item_id = meta.order_item_id
+								WHERE
+								  meta.meta_key = '_product_id'
+								  AND posts.post_type = 'shop_order_vendor'
+							  )
+							  AS id
+							  LEFT OUTER JOIN
+								(
+								  SELECT
+									meta.order_item_id AS order_item_id,
+									meta.meta_value AS product_qty
+								  FROM
+									wp_posts AS posts
+									INNER JOIN
+									  wp_woocommerce_order_items AS items
+									  ON posts.ID = items.order_id
+									INNER JOIN
+									  wp_woocommerce_order_itemmeta AS meta
+									  ON items.order_item_id = meta.order_item_id
+								  WHERE
+									meta.meta_key = '_qty'
+									AND posts.post_type = 'shop_order_vendor'
+								)
+								AS qty
+								ON qty.order_item_id = id.order_item_id
+							  LEFT OUTER JOIN
+								(
+								  SELECT
+									meta.order_item_id AS order_item_id,
+									meta.meta_value AS product_total
+								  FROM
+									wp_posts AS posts
+									INNER JOIN
+									  wp_woocommerce_order_items AS items
+									  ON posts.ID = items.order_id
+									INNER JOIN
+									  wp_woocommerce_order_itemmeta AS meta
+									  ON items.order_item_id = meta.order_item_id
+								  WHERE
+									meta.meta_key = '_line_total'
+									AND posts.post_type = 'shop_order_vendor'
+								)
+								AS total
+								ON total.order_item_id = qty.order_item_id
+							  LEFT OUTER JOIN
+								(
+								  SELECT
+									meta.order_item_id AS order_item_id,
+									meta.meta_value AS product_commission
+								  FROM
+									wp_posts AS posts
+									INNER JOIN
+									  wp_woocommerce_order_items AS items
+									  ON posts.id = items.order_id
+									INNER JOIN
+									  wp_woocommerce_order_itemmeta AS meta
+									  ON items.order_item_id = meta.order_item_id
+								  WHERE
+									meta.meta_key = '_vendor_commission'
+									AND posts.post_type = 'shop_order_vendor'
+								)
+								AS commission
+								ON commission.order_item_id = total.order_item_id
 						  )
-						  AS id
-						  LEFT OUTER JOIN
+						  AS base_item_data
+						  INNER JOIN
 							(
 							  SELECT
-								meta.order_item_id AS order_item_id,
-								meta.meta_value AS product_qty
+								posts.ID AS post_id
 							  FROM
 								wp_posts AS posts
-								INNER JOIN
-								  wp_woocommerce_order_items AS items
-								  ON posts.ID = items.order_id
-								INNER JOIN
-								  wp_woocommerce_order_itemmeta AS meta
-								  ON items.order_item_id = meta.order_item_id
 							  WHERE
-								meta.meta_key = '_qty'
-								AND posts.post_type = 'shop_order_vendor'
+								posts.post_status = 'wc-completed'
+								AND posts.post_type = 'shop_order' % s
 							)
-							AS qty
-							ON qty.order_item_id = id.order_item_id
-						  LEFT OUTER JOIN
-							(
-							  SELECT
-								meta.order_item_id AS order_item_id,
-								meta.meta_value AS product_total
-							  FROM
-								wp_posts AS posts
-								INNER JOIN
-								  wp_woocommerce_order_items AS items
-								  ON posts.ID = items.order_id
-								INNER JOIN
-								  wp_woocommerce_order_itemmeta AS meta
-								  ON items.order_item_id = meta.order_item_id
-							  WHERE
-								meta.meta_key = '_line_total'
-								AND posts.post_type = 'shop_order_vendor'
-							)
-							AS total
-							ON total.order_item_id = qty.order_item_id
-						  LEFT OUTER JOIN
-							(
-							  SELECT
-								meta.order_item_id AS order_item_id,
-								meta.meta_value AS product_commission
-							  FROM
-								wp_posts AS posts
-								INNER JOIN
-								  wp_woocommerce_order_items AS items
-								  ON posts.id = items.order_id
-								INNER JOIN
-								  wp_woocommerce_order_itemmeta AS meta
-								  ON items.order_item_id = meta.order_item_id
-							  WHERE
-								meta.meta_key = '_vendor_commission'
-								AND posts.post_type = 'shop_order_vendor'
-							)
-							AS commission
-							ON commission.order_item_id = total.order_item_id
+							AS post
+							ON post.post_id = base_item_data.parent_post
 					  )
-					  AS base_item_data
-					  INNER JOIN
-						(
-						  SELECT
-							posts.ID AS post_id
-						  FROM
-							wp_posts AS posts
-						  WHERE
-							posts.post_status = 'wc-completed'
-							AND posts.post_type = 'shop_order'
-							%s
-						)
-						AS post
-						ON post.post_id = base_item_data.parent_post
-				  )
-				  AS item_data
-				  GROUP BY
-					item_data.product_id
-				UNION
-				SELECT
-				  refund_data.product_id AS product_id,
-				  '0' AS product_qty,
-				  '0' AS product_total,
-				  SUM(refund_data.product_qty_refunded) AS product_qty_refunded,
-				  SUM(refund_data.product_total_refunded) AS product_total_refunded,
-				  '0' AS product_commission
-				FROM
-				  (
+					  AS item_data
+					GROUP BY
+					  item_data.product_id
+					UNION
 					SELECT
-					  base_refund_data.product_id AS product_id,
-					  base_refund_data.product_qty_refunded AS product_qty_refunded,
-					  base_refund_data.product_total_refunded AS product_total_refunded
+					  refund_data.product_id AS product_id,
+					  '0' AS product_qty,
+					  '0' AS product_total,
+					  SUM(refund_data.product_qty_refunded) AS product_qty_refunded,
+					  SUM(refund_data.product_total_refunded) AS product_total_refunded,
+					  '0' AS product_commission
 					FROM
 					  (
-						SELECT DISTINCT
-						  id.product_id AS product_id,
-						  qty_refunded.product_qty_refunded AS product_qty_refunded,
-						  total_refunded.product_total_refunded AS product_total_refunded,
-						  id.parent_post AS parent_post
+						SELECT
+						  base_refund_data.product_id AS product_id,
+						  base_refund_data.product_qty_refunded AS product_qty_refunded,
+						  base_refund_data.product_total_refunded AS product_total_refunded
 						FROM
 						  (
-							SELECT
-							  meta.order_item_id AS order_item_id,
-							  meta.meta_value AS product_id,
-							  posts.post_parent AS parent_post
+							SELECT DISTINCT
+							  id.product_id AS product_id,
+							  qty_refunded.product_qty_refunded AS product_qty_refunded,
+							  total_refunded.product_total_refunded AS product_total_refunded,
+							  id.parent_post AS parent_post
 							FROM
-							  wp_posts AS posts
-							  INNER JOIN
-								wp_woocommerce_order_items AS items
-								ON posts.ID = items.order_id
-							  INNER JOIN
-								wp_woocommerce_order_itemmeta AS meta
-								ON items.order_item_id = meta.order_item_id
-							WHERE
-							  meta.meta_key = '_product_id'
-							  AND posts.post_type = 'shop_order_refund'
+							  (
+								SELECT
+								  meta.order_item_id AS order_item_id,
+								  meta.meta_value AS product_id,
+								  posts.post_parent AS parent_post
+								FROM
+								  wp_posts AS posts
+								  INNER JOIN
+									wp_woocommerce_order_items AS items
+									ON posts.ID = items.order_id
+								  INNER JOIN
+									wp_woocommerce_order_itemmeta AS meta
+									ON items.order_item_id = meta.order_item_id
+								WHERE
+								  meta.meta_key = '_product_id'
+								  AND posts.post_type = 'shop_order_refund'
+							  )
+							  AS id
+							  LEFT OUTER JOIN
+								(
+								  SELECT
+									meta.order_item_id AS order_item_id,
+									meta.meta_value AS product_qty_refunded
+								  FROM
+									wp_posts AS posts
+									INNER JOIN
+									  wp_woocommerce_order_items AS items
+									  ON posts.ID = items.order_id
+									INNER JOIN
+									  wp_woocommerce_order_itemmeta AS meta
+									  ON items.order_item_id = meta.order_item_id
+								  WHERE
+									meta.meta_key = '_qty'
+									AND posts.post_type = 'shop_order_refund'
+								)
+								AS qty_refunded
+								ON qty_refunded.order_item_id = id.order_item_id
+							  LEFT OUTER JOIN
+								(
+								  SELECT
+									meta.order_item_id AS order_item_id,
+									meta.meta_value AS product_total_refunded
+								  FROM
+									wp_posts AS posts
+									INNER JOIN
+									  wp_woocommerce_order_items AS items
+									  ON posts.ID = items.order_id
+									INNER JOIN
+									  wp_woocommerce_order_itemmeta AS meta
+									  ON items.order_item_id = meta.order_item_id
+								  WHERE
+									meta.meta_key = '_line_total'
+									AND posts.post_type = 'shop_order_refund'
+								)
+								AS total_refunded
+								ON total_refunded.order_item_id = qty_refunded.order_item_id
 						  )
-						  AS id
-						  LEFT OUTER JOIN
+						  AS base_refund_data
+						  INNER JOIN
 							(
 							  SELECT
-								meta.order_item_id AS order_item_id,
-								meta.meta_value AS product_qty_refunded
+								posts.ID AS post_id
 							  FROM
 								wp_posts AS posts
-								INNER JOIN
-								  wp_woocommerce_order_items AS items
-								  ON posts.ID = items.order_id
-								INNER JOIN
-								  wp_woocommerce_order_itemmeta AS meta
-								  ON items.order_item_id = meta.order_item_id
 							  WHERE
-								meta.meta_key = '_qty'
-								AND posts.post_type = 'shop_order_refund'
+								posts.post_status = 'wc-completed'
+								AND posts.post_type = 'shop_order' % s
 							)
-							AS qty_refunded
-							ON qty_refunded.order_item_id = id.order_item_id
-						  LEFT OUTER JOIN
-							(
-							  SELECT
-								meta.order_item_id AS order_item_id,
-								meta.meta_value AS product_total_refunded
-							  FROM
-								wp_posts AS posts
-								INNER JOIN
-								  wp_woocommerce_order_items AS items
-								  ON posts.ID = items.order_id
-								INNER JOIN
-								  wp_woocommerce_order_itemmeta AS meta
-								  ON items.order_item_id = meta.order_item_id
-							  WHERE
-								meta.meta_key = '_line_total'
-								AND posts.post_type = 'shop_order_refund'
-							)
-							AS total_refunded
-							ON total_refunded.order_item_id = qty_refunded.order_item_id
+							AS post
+							ON post.post_id = base_refund_data.parent_post
 					  )
-					  AS base_refund_data
-					  INNER JOIN
-						(
-						  SELECT
-							posts.ID AS post_id
-						  FROM
-							wp_posts AS posts
-						  WHERE
-							posts.post_status = 'wc-completed'
-							AND posts.post_type = 'shop_order'
-							%s
-						)
-						AS post
-						ON post.post_id = base_refund_data.parent_post
+					  AS refund_data
+					GROUP BY
+					  refund_data.product_id
 				  )
-				  AS refund_data
-				  GROUP BY
-					refund_data.product_id
+				  AS base_product_data
+				  INNER JOIN
+					(
+					  SELECT
+						posts.id AS product_id,
+						posts.post_author AS vendor_id
+					  FROM
+						wp_posts AS posts
+					  WHERE
+						posts.post_type = 'product'
+					)
+					AS product_vendors
+					ON product_vendors.product_id = base_product_data.product_id
 			  )
-			  AS base_product_data
+			  AS product_data
 			  INNER JOIN
 				(
 				  SELECT
-					posts.id AS product_id,
-					posts.post_author AS vendor_id
+					product.product_id AS product_id,
+					product.product_name AS product_name,
+					product.product_sku AS product_sku,
+					vendor.vendor_name AS vendor_name
 				  FROM
-					wp_posts AS posts
-				  WHERE
-					posts.post_type = 'product'
+					(
+					  SELECT
+						posts.id AS product_id,
+						posts.post_title AS product_name,
+						meta.meta_value AS product_sku,
+						posts.post_author AS vendor_id
+					  FROM
+						wp_posts AS posts
+						INNER JOIN
+						  wp_postmeta AS meta
+						  ON posts.id = meta.post_id
+					  WHERE
+						meta.meta_key = '_sku'
+						AND posts.post_type = 'product'
+					)
+					AS product
+					INNER JOIN
+					  (
+						SELECT
+						  users.id AS vendor_id,
+						  users.display_name AS vendor_name
+						FROM
+						  wp_users AS users
+						  INNER JOIN
+							wp_usermeta AS meta
+							ON users.id = meta.user_id
+						WHERE
+						  meta.meta_key = 'wp_capabilities'
+						  AND meta.meta_value LIKE '%%vendor%%' % s
+					  )
+					  AS vendor
+					  ON vendor.vendor_id = product.vendor_id
 				)
-				AS product_vendors
-				ON product_vendors.product_id = base_product_data.product_id
+				AS product_meta
+				ON product_meta.product_id = product_data.product_id
+			GROUP BY
+			  product_data.product_id
+			ORDER BY
+			  product_meta.vendor_name ASC,
+			  product_meta.product_name ASC
 		  )
-		  AS product_data
-		  INNER JOIN
-			(
-			  SELECT
-				product.product_id AS product_id,
-				vendor.vendor_name AS vendor_name
-			  FROM
-				(
-				  SELECT
-					posts.id AS product_id,
-					posts.post_author AS vendor_id
-				  FROM
-					wp_posts AS posts
-				  WHERE
-					posts.post_type = 'product'
-				)
-				AS product
-				INNER JOIN
-				  (
-					SELECT
-					  users.id AS vendor_id,
-					  users.display_name AS vendor_name
-					FROM
-					  wp_users AS users
-					  INNER JOIN
-						wp_usermeta AS meta
-						ON users.id = meta.user_id
-					WHERE
-					  meta.meta_key = 'wp_capabilities'
-					  AND meta.meta_value LIKE '%%vendor%%'
-					  %s
-				  )
-				  AS vendor
-				  ON vendor.vendor_id = product.vendor_id
-			)
-			AS product_meta
-			ON product_meta.product_id = product_data.product_id
+		  AS data
 		GROUP BY
-		  product_data.vendor_id
+		  data.vendor_id
 		ORDER BY
-		  product_meta.vendor_name ASC
+		  data.vendor_name ASC
 		";
 
 	// SQL Query to get details per product
