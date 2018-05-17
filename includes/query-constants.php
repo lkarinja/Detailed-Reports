@@ -37,8 +37,8 @@ class Query_Constants
 		  CONCAT('$', ROUND(SUM(product_data.product_total), 2)) AS 'Total Sold',
 		  CONCAT('-$', ROUND(ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Total Refunded',
 		  CONCAT('$', ROUND(SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Resulting Total Sold',
-		  CONCAT('$', ROUND((SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))) - GREATEST(0, ((SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))) - ((SUM(product_data.product_commission))/(1 + ABS(SUM(product_data.product_qty_refunded)))))), 2)) AS 'Vendor Payout',
-		  CONCAT('$', ROUND(GREATEST(0, (SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))) - ((SUM(product_data.product_commission))/(1 + ABS(SUM(product_data.product_qty_refunded))))), 2)) AS 'Store Payout'
+		  CONCAT('$', ROUND((product_data.product_commission / product_data.product_qty) * (SUM(product_data.product_qty) - ABS(SUM(product_data.product_qty_refunded))), 2)) AS 'Vendor Payout',
+		  CONCAT('$', ROUND(SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded)) - (product_data.product_commission / product_data.product_qty) * (SUM(product_data.product_qty) - ABS(SUM(product_data.product_qty_refunded))), 2)) AS 'Store Payout'
 		FROM
 		  (
 			SELECT
@@ -358,8 +358,8 @@ class Query_Constants
 			  SUM(product_data.product_total) AS total_sold,
 			  ABS(SUM(product_data.product_total_refunded)) AS total_refunded,
 			  SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded)) AS resulting_total_sold,
-			  (SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))) - GREATEST(0, ((SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))) - ((SUM(product_data.product_commission)) / (1 + ABS(SUM(product_data.product_qty_refunded)))))) AS vendor_payout,
-			  GREATEST(0, (SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))) - ((SUM(product_data.product_commission)) / (1 + ABS(SUM(product_data.product_qty_refunded))))) AS store_payout
+			  (SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))) - (SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded)) - (product_data.product_commission / product_data.product_qty) * (SUM(product_data.product_qty) - ABS(SUM(product_data.product_qty_refunded)))) AS vendor_payout,
+			  SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded)) - (product_data.product_commission / product_data.product_qty) * (SUM(product_data.product_qty) - ABS(SUM(product_data.product_qty_refunded))) AS store_payout
 			FROM
 			  (
 				SELECT
