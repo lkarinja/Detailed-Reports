@@ -1,7 +1,7 @@
 <?php
 /*
 	Detailed Reports
-	Copyright (C) 2017 Leejae Karinja
+	Copyright (C) 2017-2018 Leejae Karinja
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -62,6 +62,10 @@ class Query_Builder
 		elseif($method == 'basic_by_product')
 		{
 			$base_query = Query_Constants::BASIC_ITEM_DETAILS_QUERY;
+		}
+		elseif($method == 'by_order')
+		{
+			$base_query = Query_Constants::ORDER_DETAILS_QUERY;
 		}
 
 		// Apply database table prefix

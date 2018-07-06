@@ -2,7 +2,7 @@
 /*
 	Plugin Name: WooCommerce/WC-Vendors Detailed Reports
 	Description: Generates detailed sales reports
-	Version: 1.3.1
+	Version: 1.4.0
 	Author: <a href="https://github.com/lkarinja">Leejae Karinja</a>
 	License: GPL3
 	License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -10,7 +10,7 @@
 
 /*
 	Detailed Reports
-	Copyright (C) 2017 Leejae Karinja
+	Copyright (C) 2017-2018 Leejae Karinja
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -174,6 +174,7 @@ if(!class_exists('Detailed_Reports'))
 							<option value="by_product" <?php _e(selected($selected_method, 'by_product', false), $this->textdomain) ?>><?php _e('Product Sales Information', $this->textdomain); ?></option>
 							<option value="by_vendor" <?php _e(selected($selected_method, 'by_vendor', false), $this->textdomain) ?>><?php _e('Vendor Sales Information', $this->textdomain); ?></option>
 							<option value="basic_by_product" <?php _e(selected($selected_method, 'basic_by_product', false), $this->textdomain) ?>><?php _e('Product Quantities', $this->textdomain); ?></option>
+							<option value="by_order" <?php _e(selected($selected_method, 'by_order', false), $this->textdomain) ?>><?php _e('Order Sales Information', $this->textdomain); ?></option>
 						</select>
 
 						<label><?php _e('From:', $this->textdomain); ?></label>
