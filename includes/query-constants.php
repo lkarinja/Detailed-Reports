@@ -894,7 +894,6 @@ class Query_Constants
 		  order_data.payment_method AS 'Payment Method',
 		  CONCAT('$', ROUND(order_data.order_total, 2)) AS 'Order Total',
 		  CONCAT('$', ROUND(total_data.product_total, 2)) AS 'Product Total',
-		  CONCAT('$', ROUND(total_data.product_commission, 2)) AS 'Product Commission',
 		  CONCAT('$', ROUND((order_data.order_total - total_data.product_total), 2)) AS 'Fee',
 		  CONCAT('-$', ROUND(ABS(IFNULL(refund_data.refund_total, 0)), 2)) AS 'Refund Total',
 		  CONCAT('$', ROUND((total_data.product_total - ABS(IFNULL(refund_data.refund_total, 0)) + (order_data.order_total - total_data.product_total)), 2)) AS 'Net Sale'
@@ -980,20 +979,18 @@ class Query_Constants
 				(
 				  SELECT
 					SUM(total_data.product_total) AS product_total,
-					SUM(total_data.product_commission) AS product_commission,
-					total_data.parent_post AS parent_post
+					total_data.post_id AS post_id
 				  FROM
 					(
 					  SELECT
 						total.product_total AS product_total,
-						commission.product_commission AS product_commission,
-						id.parent_post AS parent_post
+						id.post_id AS post_id
 					  FROM
 						(
 						  SELECT
 							meta.order_item_id AS order_item_id,
 							meta.meta_value AS product_id,
-							posts.post_parent AS parent_post
+							posts.ID AS post_id
 						  FROM
 							wp_posts AS posts
 							INNER JOIN
@@ -1004,7 +1001,7 @@ class Query_Constants
 							  ON items.order_item_id = meta.order_item_id
 						  WHERE
 							meta.meta_key = '_product_id'
-							AND posts.post_type = 'shop_order_vendor'
+							AND posts.post_type = 'shop_order'
 						)
 						AS id
 						LEFT OUTER JOIN
@@ -1022,36 +1019,17 @@ class Query_Constants
 								ON items.order_item_id = meta.order_item_id
 							WHERE
 							  meta.meta_key = '_line_total'
-							  AND posts.post_type = 'shop_order_vendor'
+							  AND posts.post_type = 'shop_order'
 						  )
 						  AS total
 						  ON total.order_item_id = id.order_item_id
-						LEFT OUTER JOIN
-						  (
-							SELECT
-							  meta.order_item_id AS order_item_id,
-							  meta.meta_value AS product_commission
-							FROM
-							  wp_posts AS posts
-							  INNER JOIN
-								wp_woocommerce_order_items AS items
-								ON posts.id = items.order_id
-							  INNER JOIN
-								wp_woocommerce_order_itemmeta AS meta
-								ON items.order_item_id = meta.order_item_id
-							WHERE
-							  meta.meta_key = '_vendor_commission'
-							  AND posts.post_type = 'shop_order_vendor'
-						  )
-						  AS commission
-						  ON commission.order_item_id = total.order_item_id
 					)
 					AS total_data
 				  GROUP BY
-					total_data.parent_post
+					total_data.post_id
 				)
 				AS total_data
-				ON total_data.parent_post = order_data.post_id
+				ON total_data.post_id = order_data.post_id
 			  LEFT OUTER JOIN
 				(
 				  SELECT
@@ -1105,7 +1083,7 @@ class Query_Constants
 					refund_data.parent_post
 				)
 				AS refund_data
-				ON refund_data.parent_post = total_data.parent_post
+				ON refund_data.parent_post = total_data.post_id
 		  )
 		";
 }
