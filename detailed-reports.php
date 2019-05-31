@@ -2,7 +2,7 @@
 /*
 	Plugin Name: WooCommerce/WC-Vendors Detailed Reports
 	Description: Generates detailed sales reports
-	Version: 1.4.1
+	Version: 1.5.0
 	Author: <a href="https://github.com/lkarinja">Leejae Karinja</a>
 	License: GPL3
 	License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -10,7 +10,7 @@
 
 /*
 	Detailed Reports
-	Copyright (C) 2017-2018 Leejae Karinja
+	Copyright (C) 2017-2019 Leejae Karinja
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -71,8 +71,11 @@ if(!class_exists('Detailed_Reports'))
 			// Set plugin textdomain for the Admin Pages
 			$this->textdomain = 'detailed-reports';
 
-			// On every page load
+			// On every page load (Add Admin Pages)
 			add_action('init', array($this, 'init'));
+
+			// On plugin activation (Add custom Capabilities)
+			register_activation_hook(__FILE__, array($this, 'plugin_activate'));
 		}
 
 		/**
@@ -92,18 +95,37 @@ if(!class_exists('Detailed_Reports'))
 		 */
 		public function add_admin_page()
 		{
-			// Create Admin Page
-			$admin_page = add_submenu_page(
-				'woocommerce',
-				__('Detailed Reports', $this->textdomain),
-				__('Detailed Reports', $this->textdomain),
-				'manage_options',
-				$this->textdomain,
-				array(
-					$this,
-					'reports_page'
-				)
-			);
+			if(current_user_can('manage_woocommerce'))
+			{
+				// Create Admin Submenu Page under WooCommerce
+				$admin_page = add_submenu_page(
+					'woocommerce',
+					__('Detailed Reports', $this->textdomain),
+					__('Detailed Reports', $this->textdomain),
+					'view_detailed_reports',
+					$this->textdomain,
+					array(
+						$this,
+						'reports_page'
+					)
+				);
+			} else {
+				// Create Admin Menu Page
+				$admin_page = add_menu_page(
+					__('Detailed Reports', $this->textdomain),
+					__('Detailed Reports', $this->textdomain),
+					'view_detailed_reports',
+					$this->textdomain,
+					array(
+						$this,
+						'reports_page'
+					),
+					// Do not display a Menu Icon (Use CSS instead)
+					'none',
+					// This places it after WooCommerce but before Tools/Settings
+					58
+				);
+			}
 			// Apply CSS
 			add_action('load-' . $admin_page, array($this, 'add_admin_css'));
 		}
@@ -122,6 +144,17 @@ if(!class_exists('Detailed_Reports'))
 		public function admin_page_css()
 		{
 			wp_enqueue_style('detailed-reports-stylesheet', plugins_url('css/admin-page.css', __FILE__));
+		}
+
+		/**
+		 * Creates custom Capability 'view_detailed_reports' to view/use this plugin
+		 */
+		public function plugin_activate()
+		{
+			// Admin Role
+			$admin_role = get_role('administrator');
+			// Allow this role to view/use the plugin page
+			$admin_role->add_cap('view_detailed_reports', true);
 		}
 
 		/**
