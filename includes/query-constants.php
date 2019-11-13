@@ -290,19 +290,33 @@ class Query_Constants
 				vendor.vendor_name AS vendor_name
 			  FROM
 				(
-				  SELECT
-					posts.id AS product_id,
-					posts.post_title AS product_name,
-					meta.meta_value AS product_sku,
-					posts.post_author AS vendor_id
-				  FROM
-					wp_posts AS posts
-					INNER JOIN
-					  wp_postmeta AS meta
-					  ON posts.id = meta.post_id
-				  WHERE
-					meta.meta_key = '_sku'
-					AND posts.post_type = 'product'
+					SELECT 
+						posts.product_id,
+						posts.product_name,
+						meta.product_sku,
+						posts.vendor_id
+					FROM
+					(		  
+					SELECT
+						posts.id AS product_id,
+						posts.post_title AS product_name,
+						posts.post_author AS vendor_id
+					FROM
+						wp_posts AS posts
+					WHERE
+						posts.post_type = 'product'
+					) AS posts
+					LEFT JOIN
+					(
+					SELECT
+						meta.meta_value AS product_sku,
+						meta.post_id AS post_id
+					FROM
+						wp_postmeta AS meta
+					WHERE
+						meta.meta_key = '_sku'
+					) AS meta
+					ON posts.product_id = meta.post_id
 				)
 				AS product
 				INNER JOIN
@@ -609,19 +623,33 @@ class Query_Constants
 					vendor.vendor_name AS vendor_name
 				  FROM
 					(
-					  SELECT
-						posts.id AS product_id,
-						posts.post_title AS product_name,
-						meta.meta_value AS product_sku,
-						posts.post_author AS vendor_id
-					  FROM
-						wp_posts AS posts
-						INNER JOIN
-						  wp_postmeta AS meta
-						  ON posts.id = meta.post_id
-					  WHERE
-						meta.meta_key = '_sku'
-						AND posts.post_type = 'product'
+						SELECT 
+							posts.product_id,
+							posts.product_name,
+							meta.product_sku,
+							posts.vendor_id
+						FROM
+						(		  
+						SELECT
+							posts.id AS product_id,
+							posts.post_title AS product_name,
+							posts.post_author AS vendor_id
+						FROM
+							wp_posts AS posts
+						WHERE
+							posts.post_type = 'product'
+						) AS posts
+						LEFT JOIN
+						(
+						SELECT
+							meta.meta_value AS product_sku,
+							meta.post_id AS post_id
+						FROM
+							wp_postmeta AS meta
+						WHERE
+							meta.meta_key = '_sku'
+						) AS meta
+						ON posts.product_id = meta.post_id
 					)
 					AS product
 					INNER JOIN
@@ -843,19 +871,33 @@ class Query_Constants
 				vendor.vendor_name AS vendor_name
 			  FROM
 				(
-				  SELECT
-					posts.id AS product_id,
-					posts.post_title AS product_name,
-					meta.meta_value AS product_sku,
-					posts.post_author AS vendor_id
-				  FROM
-					wp_posts AS posts
-					INNER JOIN
-					  wp_postmeta AS meta
-					  ON posts.id = meta.post_id
-				  WHERE
-					meta.meta_key = '_sku'
-					AND posts.post_type = 'product'
+					SELECT 
+						posts.product_id,
+						posts.product_name,
+						meta.product_sku,
+						posts.vendor_id
+					FROM
+					(		  
+					SELECT
+						posts.id AS product_id,
+						posts.post_title AS product_name,
+						posts.post_author AS vendor_id
+					FROM
+						wp_posts AS posts
+					WHERE
+						posts.post_type = 'product'
+					) AS posts
+					LEFT JOIN
+					(
+					SELECT
+						meta.meta_value AS product_sku,
+						meta.post_id AS post_id
+					FROM
+						wp_postmeta AS meta
+					WHERE
+						meta.meta_key = '_sku'
+					) AS meta
+					ON posts.product_id = meta.post_id
 				)
 				AS product
 				INNER JOIN
