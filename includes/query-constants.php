@@ -937,8 +937,8 @@ class Query_Constants
 		  CONCAT('$', ROUND(order_data.order_total, 2)) AS 'Order Total',
 		  CONCAT('$', ROUND(total_data.product_total, 2)) AS 'Product Total',
 		  CONCAT('$', ROUND((order_data.order_total - total_data.product_total), 2)) AS 'Fee',
-		  CONCAT('-$', ROUND(ABS(IFNULL(refund_data.refund_total, 0)), 2)) AS 'Refund Total',
-		  CONCAT('$', ROUND((total_data.product_total - ABS(IFNULL(refund_data.refund_total, 0)) + (order_data.order_total - total_data.product_total)), 2)) AS 'Net Sale'
+		  CONCAT('-$', ROUND((ABS(IFNULL(refund_data.refund_total, 0)) * ROUND(order_data.order_total / total_data.product_total, 2)), 2)) AS 'Refund Total',
+		  CONCAT('$', ROUND((order_data.order_total - (ABS(IFNULL(refund_data.refund_total, 0)) * ROUND(order_data.order_total / total_data.product_total, 2))), 2)) AS 'Net Sale'
 		FROM
 		  (
 			(
