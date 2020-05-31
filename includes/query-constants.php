@@ -72,13 +72,13 @@ class Query_Constants
 						  qty.product_qty AS product_qty,
 						  total.product_total AS product_total,
 						  commission.product_commission AS product_commission,
-						  id.parent_post AS parent_post
+						  id.post_id AS parent_post
 						FROM
 						  (
 							SELECT
 							  meta.order_item_id AS order_item_id,
 							  meta.meta_value AS product_id,
-							  posts.post_parent AS parent_post
+							  posts.ID AS post_id
 							FROM
 							  wp_posts AS posts
 							  INNER JOIN
@@ -89,7 +89,7 @@ class Query_Constants
 								ON items.order_item_id = meta.order_item_id
 							WHERE
 							  meta.meta_key = '_product_id'
-							  AND posts.post_type = 'shop_order_vendor'
+							  AND posts.post_type = 'shop_order'
 						  )
 						  AS id
 						  LEFT OUTER JOIN
@@ -107,7 +107,7 @@ class Query_Constants
 								  ON items.order_item_id = meta.order_item_id
 							  WHERE
 								meta.meta_key = '_qty'
-								AND posts.post_type = 'shop_order_vendor'
+								AND posts.post_type = 'shop_order'
 							)
 							AS qty
 							ON qty.order_item_id = id.order_item_id
@@ -126,26 +126,52 @@ class Query_Constants
 								  ON items.order_item_id = meta.order_item_id
 							  WHERE
 								meta.meta_key = '_line_total'
-								AND posts.post_type = 'shop_order_vendor'
+								AND posts.post_type = 'shop_order'
 							)
 							AS total
 							ON total.order_item_id = qty.order_item_id
-						  LEFT OUTER JOIN
+						  INNER JOIN
 							(
 							  SELECT
-								meta.order_item_id AS order_item_id,
-								meta.meta_value AS product_commission
+								commission_meta.product_commission AS product_commission,
+								comission_order_item_meta.vendor_order_item_id AS order_item_id
 							  FROM
-								wp_posts AS posts
-								INNER JOIN
-								  wp_woocommerce_order_items AS items
-								  ON posts.id = items.order_id
-								INNER JOIN
-								  wp_woocommerce_order_itemmeta AS meta
-								  ON items.order_item_id = meta.order_item_id
-							  WHERE
-								meta.meta_key = '_vendor_commission'
-								AND posts.post_type = 'shop_order_vendor'
+								(
+								  SELECT
+									meta.order_item_id AS order_item_id,
+									meta.meta_value AS product_commission
+								  FROM
+									wp_posts AS posts
+									INNER JOIN
+									  wp_woocommerce_order_items AS items
+									  ON posts.id = items.order_id
+									INNER JOIN
+									  wp_woocommerce_order_itemmeta AS meta
+									  ON items.order_item_id = meta.order_item_id
+								  WHERE
+									meta.meta_key = '_vendor_commission'
+									AND posts.post_type = 'shop_order_vendor'
+								)
+								AS commission_meta
+							  INNER JOIN
+								(
+								  SELECT
+									meta.order_item_id AS order_item_id,
+									meta.meta_value AS vendor_order_item_id
+								  FROM
+									wp_posts AS posts
+									INNER JOIN
+									  wp_woocommerce_order_items AS items
+									  ON posts.id = items.order_id
+									INNER JOIN
+									  wp_woocommerce_order_itemmeta AS meta
+									  ON items.order_item_id = meta.order_item_id
+								  WHERE
+									meta.meta_key = '_vendor_order_item_id'
+									AND posts.post_type = 'shop_order_vendor'
+								)
+								AS comission_order_item_meta
+								ON commission_meta.order_item_id = comission_order_item_meta.order_item_id
 							)
 							AS commission
 							ON commission.order_item_id = total.order_item_id
@@ -715,13 +741,13 @@ class Query_Constants
 						SELECT DISTINCT
 						  id.product_id AS product_id,
 						  qty.product_qty AS product_qty,
-						  id.parent_post AS parent_post
+						  id.post_id AS parent_post
 						FROM
 						  (
 							SELECT
 							  meta.order_item_id AS order_item_id,
 							  meta.meta_value AS product_id,
-							  posts.post_parent AS parent_post
+							  posts.ID AS post_id
 							FROM
 							  wp_posts AS posts
 							  INNER JOIN
@@ -732,7 +758,7 @@ class Query_Constants
 								ON items.order_item_id = meta.order_item_id
 							WHERE
 							  meta.meta_key = '_product_id'
-							  AND posts.post_type = 'shop_order_vendor'
+							  AND posts.post_type = 'shop_order'
 						  )
 						  AS id
 						  LEFT OUTER JOIN
@@ -750,7 +776,7 @@ class Query_Constants
 								  ON items.order_item_id = meta.order_item_id
 							  WHERE
 								meta.meta_key = '_qty'
-								AND posts.post_type = 'shop_order_vendor'
+								AND posts.post_type = 'shop_order'
 							)
 							AS qty
 							ON qty.order_item_id = id.order_item_id
