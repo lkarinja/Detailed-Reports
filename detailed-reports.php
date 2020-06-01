@@ -2,7 +2,7 @@
 /*
 	Plugin Name: WooCommerce/WC-Vendors Detailed Reports
 	Description: Generates detailed sales reports
-	Version: 1.6.0
+	Version: 1.7.0
 	Author: <a href="https://github.com/lkarinja">Leejae Karinja</a>
 	License: GPL3
 	License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -10,7 +10,7 @@
 
 /*
 	Detailed Reports
-	Copyright (C) 2017-2019 Leejae Karinja
+	Copyright (C) 2017-2020 Leejae Karinja
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by

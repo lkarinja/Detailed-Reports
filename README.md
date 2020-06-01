@@ -8,4 +8,5 @@ Issue Count: [![Issue Count](https://codeclimate.com/github/lkarinja/Detailed-Re
 Generates detailed sales reports from WooCommerce and WC Vendors
 
 Note:
+WC Vendors Commission data is currently disabled, waiting on their rewrite of the Commission system before updating.
 An "Exports" folder must be created in your base WordPress installation directory with Read and Write permissions.
