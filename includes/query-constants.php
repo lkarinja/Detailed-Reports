@@ -36,16 +36,16 @@ class Query_Constants
 		  (SUM(product_data.product_qty) - ABS(SUM(product_data.product_qty_refunded))) AS 'Resulting Quantity Sold',
 		  CONCAT('$', ROUND(SUM(product_data.product_total), 2)) AS 'Total Sold',
 		  CONCAT('-$', ROUND(ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Total Refunded',
-		  CONCAT('$', ROUND(SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Resulting Total Sold',
+		  CONCAT('$', ROUND(SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded)), 2)) AS 'Resulting Total Sold'/*,
 		  CONCAT('$', ROUND((product_data.product_commission / SUM(product_data.product_total)) * (SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))), 2)) AS 'Vendor Payout',
-		  CONCAT('$', ROUND((SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))) - ((product_data.product_commission / SUM(product_data.product_total)) * (SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded)))), 2)) AS 'Store Payout'
+		  CONCAT('$', ROUND((SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded))) - ((product_data.product_commission / SUM(product_data.product_total)) * (SUM(product_data.product_total) - ABS(SUM(product_data.product_total_refunded)))), 2)) AS 'Store Payout'*/
 		FROM
 		  (
 			SELECT
 			  base_product_data.product_id AS product_id,
 			  base_product_data.product_qty AS product_qty,
 			  base_product_data.product_total AS product_total,
-			  base_product_data.product_commission AS product_commission,
+			  /*base_product_data.product_commission AS product_commission,*/
 			  base_product_data.product_qty_refunded AS product_qty_refunded,
 			  base_product_data.product_total_refunded AS product_total_refunded,
 			  product_vendors.vendor_id AS vendor_id
@@ -56,42 +56,42 @@ class Query_Constants
 				  SUM(item_data.product_qty) AS product_qty,
 				  SUM(item_data.product_total) AS product_total,
 				  '0' AS product_qty_refunded,
-				  '0' AS product_total_refunded,
-				  SUM(item_data.product_commission) AS product_commission
+				  '0' AS product_total_refunded/*,
+				  SUM(item_data.product_commission) AS product_commission*/
 				FROM
 				  (
 					SELECT
 					  base_item_data.product_id AS product_id,
 					  base_item_data.product_qty AS product_qty,
-					  base_item_data.product_total AS product_total,
-					  base_item_data.product_commission AS product_commission
+					  base_item_data.product_total AS product_total/*,
+					  base_item_data.product_commission AS product_commission*/
 					FROM
 					  (
 						SELECT DISTINCT
 						  id.product_id AS product_id,
 						  qty.product_qty AS product_qty,
 						  total.product_total AS product_total,
-						  commission.product_commission AS product_commission,
+						  /*commission.product_commission AS product_commission,*/
 						  id.post_id AS parent_post
 						FROM
-						  (
-							SELECT
-							  meta.order_item_id AS order_item_id,
-							  meta.meta_value AS product_id,
-							  posts.ID AS post_id
-							FROM
-							  wp_posts AS posts
-							  INNER JOIN
-								wp_woocommerce_order_items AS items
-								ON posts.ID = items.order_id
-							  INNER JOIN
-								wp_woocommerce_order_itemmeta AS meta
-								ON items.order_item_id = meta.order_item_id
-							WHERE
-							  meta.meta_key = '_product_id'
-							  AND posts.post_type = 'shop_order'
-						  )
-						  AS id
+							(
+							  SELECT
+								meta.order_item_id AS order_item_id,
+								meta.meta_value AS product_id,
+								posts.ID AS post_id
+							  FROM
+								wp_posts AS posts
+							    INNER JOIN
+								  wp_woocommerce_order_items AS items
+								  ON posts.ID = items.order_id
+							    INNER JOIN
+								  wp_woocommerce_order_itemmeta AS meta
+								  ON items.order_item_id = meta.order_item_id
+							  WHERE
+								meta.meta_key = '_product_id'
+								AND posts.post_type = 'shop_order'
+							)
+							AS id
 						  LEFT OUTER JOIN
 							(
 							  SELECT
@@ -130,7 +130,7 @@ class Query_Constants
 							)
 							AS total
 							ON total.order_item_id = qty.order_item_id
-						  INNER JOIN
+						  /*INNER JOIN
 							(
 							  SELECT
 								commission_meta.product_commission AS product_commission,
@@ -174,7 +174,7 @@ class Query_Constants
 								ON commission_meta.order_item_id = comission_order_item_meta.order_item_id
 							)
 							AS commission
-							ON commission.order_item_id = total.order_item_id
+							ON commission.order_item_id = total.order_item_id*/
 					  )
 					  AS base_item_data
 					  INNER JOIN
@@ -200,8 +200,8 @@ class Query_Constants
 				  '0' AS product_qty,
 				  '0' AS product_total,
 				  SUM(refund_data.product_qty_refunded) AS product_qty_refunded,
-				  SUM(refund_data.product_total_refunded) AS product_total_refunded,
-				  '0' AS product_commission
+				  SUM(refund_data.product_total_refunded) AS product_total_refunded/*,
+				  '0' AS product_commission*/
 				FROM
 				  (
 					SELECT
@@ -345,7 +345,7 @@ class Query_Constants
 					ON posts.product_id = meta.post_id
 				)
 				AS product
-				INNER JOIN
+				LEFT OUTER JOIN
 				  (
 					SELECT
 					  users.id AS vendor_id,
@@ -926,7 +926,7 @@ class Query_Constants
 					ON posts.product_id = meta.post_id
 				)
 				AS product
-				INNER JOIN
+				LEFT OUTER JOIN
 				  (
 					SELECT
 					  users.id AS vendor_id,
