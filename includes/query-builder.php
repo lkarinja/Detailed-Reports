@@ -1,7 +1,7 @@
 <?php
 /*
 	Detailed Reports
-	Copyright (C) 2017-2018 Leejae Karinja
+	Copyright (C) 2017-2022 Leejae Karinja
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -54,14 +54,16 @@ class Query_Builder
 		if($method == 'by_product')
 		{
 			$base_query = Query_Constants::ITEM_DETAILS_QUERY;
+			$base_query = str_replace('*/*Select*/', Query_Constants::DETAILED_ITEM_DETAILS_SELECT, $base_query);
+		}
+		elseif($method == 'basic_by_product')
+		{
+			$base_query = Query_Constants::ITEM_DETAILS_QUERY;
+			$base_query = str_replace('*/*Select*/', Query_Constants::BASIC_ITEM_DETAILS_SELECT, $base_query);
 		}
 		elseif($method == 'by_vendor')
 		{
 			$base_query = Query_Constants::VENDOR_DETAILS_QUERY;
-		}
-		elseif($method == 'basic_by_product')
-		{
-			$base_query = Query_Constants::BASIC_ITEM_DETAILS_QUERY;
 		}
 		elseif($method == 'by_order')
 		{
